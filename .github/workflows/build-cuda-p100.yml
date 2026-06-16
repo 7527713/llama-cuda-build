@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-cuda-p100:
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - name: Checkout llama.cpp
         uses: actions/checkout@v4
@@ -14,10 +14,10 @@ jobs:
           ref: master
           submodules: recursive
 
-      - name: Install CUDA 12.2 Toolkit
+      - name: Install CUDA 12.4 Toolkit
         uses: Jimver/cuda-toolkit@v0.2.21
         with:
-          cuda: '12.2.2'
+          cuda: '12.4.1'
           method: 'local'
 
       - name: Verify CUDA
@@ -27,7 +27,7 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -B build -G "Visual Studio 16 2019" -A x64 `
+          cmake -B build -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_BUILD_TYPE=Release `
             -DGGML_CUDA=ON `
             -DCUDA_ARCHITECTURES=60 `
