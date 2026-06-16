@@ -1,0 +1,59 @@
+name: Build llama.cpp CUDA for Tesla P100
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-cuda-p100:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout llama.cpp
+        uses: actions/checkout@v4
+        with:
+          repository: ggml-org/llama.cpp
+          ref: master
+          submodules: recursive
+
+      - name: Install CUDA 12.2 Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.21
+        with:
+          cuda: '12.2.2'
+          method: 'network'
+          sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev", "cusolver", "cusolver_dev"]'
+
+      - name: Verify CUDA
+        run: |
+          nvcc --version
+          where nvcc
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DGGML_CUDA=ON `
+            -DCUDA_ARCHITECTURES=60 `
+            -DGGML_CUDA_FA=OFF `
+            -DGGML_CUDA_FORCE_MMQ=ON `
+            -DGGML_CUDA_GRAPHS=OFF `
+            -DLLAMA_BUILD_TESTS=OFF `
+            -DLLAMA_BUILD_TOOLS=ON `
+            -DLLAMA_BUILD_EXAMPLES=ON `
+            -DLLAMA_BUILD_SERVER=ON
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Collect outputs
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path output
+          Copy-Item -Path build\bin\Release\*.exe -Destination output\ -ErrorAction SilentlyContinue
+          Copy-Item -Path build\bin\Release\*.dll -Destination output\ -ErrorAction SilentlyContinue
+          Get-ChildItem output\
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: llama-cuda-sm60-p100
+          path: output/
+          retention-days: 30
