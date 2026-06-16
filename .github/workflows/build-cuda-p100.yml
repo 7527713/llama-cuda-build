@@ -18,8 +18,7 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.21
         with:
           cuda: '12.2.2'
-          method: 'network'
-          sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev", "cusolver", "cusolver_dev"]'
+          method: 'local'
 
       - name: Verify CUDA
         run: |
